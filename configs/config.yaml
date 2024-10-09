@@ -8,5 +8,11 @@ model:
   num_layers: 10
   kernel_size: 2
 train:
-  batch_size: 32
+  batch_size: 16
   learning_rate: 0.001
+  total_epochs: 1000
+  ckpt_interval: 10
+  val_interval: 5
+  n_saved: 5
+  experiment_name: case0
+  resume_from: -1

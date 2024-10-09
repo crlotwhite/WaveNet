@@ -1,5 +1,5 @@
 import librosa
-import math
+import numpy as np
 import torch
 import torch.nn.functional as F
 
@@ -7,12 +7,26 @@ from datasets import Audio, load_dataset
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-def mulaw(audio):
-    # 오디오 신호를 8비트 μ-law 양자화
-    # https://en.wikipedia.org/wiki/%CE%9C-law_algorithm
-    mu = 255
-    quantized = torch.floor((torch.sign(audio) * torch.log(1 + mu * torch.abs(audio)) / math.log(1 + mu) + 1) / 2 * 256)
-    return quantized.long()
+
+def mulaw(audio, mu=255):
+    """
+    오디오 신호를 8비트 μ-law 양자화하는 함수
+
+    Parameters:
+    - audio: 입력 오디오 신호 (NumPy 배열, float32 타입)
+    - mu: μ-law 파라미터 (기본값: 255, 8비트 양자화 기준)
+
+    Returns:
+    - quantized: μ-law 양자화된 정수 값 (0 ~ 255 범위)
+    """
+    # μ-law 변환 수행
+    audio_sign = np.sign(audio)
+    magnitude = np.log1p(mu * np.abs(audio)) / np.log1p(mu)
+    quantized = ((audio_sign * magnitude) + 1) / 2 * mu
+
+    # 정수로 변환
+    quantized = np.floor(quantized).astype(np.int32)
+    return quantized
 
 def collate_fn(batch):
     """
@@ -30,8 +44,8 @@ def collate_fn(batch):
     """
 
     # 각 샘플에서 quantized와 length를 분리
-    sequences = [torch.tensor(example['quantized']) for example in batch]
-    lengths = [example['length'] for example in batch]
+    sequences = [data['quantized'] for data in batch]
+    lengths = [data['length'] for data in batch]
 
     # 오디오 데이터를 패딩하고 동일한 길이로 맞추기
     padded_sequences = pad_sequence(sequences, batch_first=True, padding_value=0)
@@ -46,7 +60,6 @@ def collate_fn(batch):
 
     # 길이를 텐서로 변환하여 반환
     lengths = torch.tensor(lengths)
-
     return inputs, targets, lengths
 
 def preprocess_audio(example, cfg):
@@ -87,14 +100,14 @@ def load_data(cfg):
     - test_loader: 검증용 데이터셋에 대한 데이터로더
     """
     ds = load_dataset('keithito/lj_speech', split="train")
-    ds = ds.train_test_split(test_size=0.2, random_state=42)
     ds = ds.cast_column("audio", Audio(sampling_rate=cfg.data.sample_rate))
-    ds = ds.with_format('torch')
     ds = ds.map(preprocess_audio, fn_kwargs={'cfg': cfg}, remove_columns=['audio', 'file', 'text', 'normalized_text'])
+    ds = ds.train_test_split(test_size=0.2, shuffle=True)
+    ds = ds.with_format('torch')
 
     train_set, test_set = ds['train'], ds['test']
     train_loader = DataLoader(train_set, batch_size=cfg.train.batch_size, shuffle=True, collate_fn=collate_fn)
-    test_loader = DataLoader(test_set, batch_size=cfg.test.batch_size, shuffle=False, collate_fn=collate_fn)
+    test_loader = DataLoader(test_set, batch_size=cfg.train.batch_size, shuffle=False, collate_fn=collate_fn)
 
     return train_loader, test_loader
 
