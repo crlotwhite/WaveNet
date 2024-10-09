@@ -10,6 +10,7 @@ packages = [
 
 [tool.poetry.scripts]
 train = "scripts.train:main"
+inference = "scripts.inference:main"
 
 [tool.poetry.dependencies]
 python = "^3.12"
