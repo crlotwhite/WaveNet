@@ -21,6 +21,7 @@ tqdm = "^4.66.5"
 datasets = "2.21.0"
 llvmlite = "^0.43.0"
 librosa = "^0.10.2.post1"
+pytorch-ignite = "^0.5.1"
 
 [[tool.poetry.source]]
 name = "pytorch"
