@@ -19,11 +19,9 @@ def train_step(engine, batch, model, optimizer, criterion, device):
     inputs, targets, lengths = batch
     inputs, targets = inputs.to(device), targets.to(device)
 
-    print(inputs.shape, targets.shape, lengths.shape)
-    optimizer.zero_grad()
+    optimizer.zero_grad(set_to_none=True)
     outputs = model(inputs)
-    print('++++++')
-    loss = criterion(outputs.transpose(1, 2), targets)
+    loss = criterion(outputs, targets)
     loss.backward()
     optimizer.step()
 
