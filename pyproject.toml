@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "wavenet"
+version = "0.1.0"
+description = ""
+authors = ["crlotwhite <crlotwhite@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "scripts" }
+]
+
+[tool.poetry.scripts]
+train = "scripts.train:main"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+torch = {version = "^2.4.1+cu124", source = "pytorch"}
+torchvision = {version = "^0.19.1+cu124", source = "pytorch"}
+torchaudio = {version = "^2.4.1+cu124", source = "pytorch"}
+hydra-core = "^1.3.2"
+tqdm = "^4.66.5"
+datasets = "2.21.0"
+llvmlite = "^0.43.0"
+librosa = "^0.10.2.post1"
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu124"
+priority = "explicit"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
