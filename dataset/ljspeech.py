@@ -6,13 +6,10 @@ from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
 def collate_fn(batch):
-    # batch는 [(mel_spec, waveform), (mel_spec, waveform), ...] 형태입니다.
     mel_specs = [item['mel_spectrogram'].transpose(0, 1) for item in batch]
     waveforms = [item['waveform'] for item in batch]
 
-    sizes = [mel.size() for mel in mel_specs]
-
-    # Mel-spectrogram과 waveform의 길이를 맞추기 위해 패딩을 적용합니다.
+    # Mel-spectrogram과 waveform의 길이를 맞추기 위해 패딩을 적용
     mel_specs_padded = pad_sequence(mel_specs, batch_first=True, padding_value=0.0)  # (batch_size, n_mels, max_time)
     waveforms_padded = pad_sequence(waveforms, batch_first=True, padding_value=0.0)  # (batch_size, max_time)
     mel_specs_padded = mel_specs_padded.transpose(1, 2)
