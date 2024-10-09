@@ -34,20 +34,17 @@ class WaveNet(nn.Module):
     def forward(self, x):
         # causal conv
         x = self.initial_conv(x)
-        skip_connections = []
+        skip_connections = 0
 
         # k layers
         for block in self.residual_blocks:
             x, skip = block(x)
-            skip_connections.append(skip)
+            skip_connections += skip
 
         # output
-        skip_connections = torch.cat(skip_connections, dim=1)
         skip_out = F.relu(skip_connections)
         skip_out = self.final_conv1(skip_out)
         skip_out = F.relu(skip_out)
         out = self.final_conv2(skip_out)
-
-        # CrossEntropyLoss에서 내부적으로 softmax를 수행하기 때문에 softmax 생략
 
         return out
